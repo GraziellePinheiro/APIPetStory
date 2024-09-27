@@ -68,7 +68,7 @@ public class UserApiTest {
         response.then().statusCode(200)
             .and()
             .body("username", equalTo("user1"))
-            .body("email", equalTo("john.doe@example.com"));
+            .body("email", equalTo("user1@email.com"));
         
     }
     @Test
