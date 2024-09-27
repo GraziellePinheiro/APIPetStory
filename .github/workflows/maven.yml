@@ -1,7 +1,18 @@
+<<<<<<< HEAD
+=======
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+>>>>>>> a0fe3f4e3c3ced2cb8e28b274ca858fbcceb9cc0
 name: Java CI with Maven
 
 on:
   push:
+<<<<<<< HEAD
     branches: ["main"]
   pull_request:
     branches: ["main"]
@@ -24,3 +35,36 @@ jobs:
       # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
       - name: Update dependency graph
         uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+=======
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest  # Definido para rodar no Windows
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'  # Java 11 conforme especificado
+        distribution: 'temurin'  # Java Temurin, que é a distribuição mais comum
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B clean install --file pom.xml
+      shell: cmd  # Usar o shell do Windows (cmd.exe)
+
+    - name: Run tests
+      run: mvn test --file pom.xml
+      shell: cmd  # Usar o shell do Windows (cmd.exe)
+
+    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
+    - name: Update dependency graph
+      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+
+>>>>>>> a0fe3f4e3c3ced2cb8e28b274ca858fbcceb9cc0
