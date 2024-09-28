@@ -6,13 +6,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.List;
 
+import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+
+import com.apipetstory.config.Configuracoes;
+import com.apipetstory.factory.UsuarioDataFactory;
+import com.apipetstory.pojo.Category;
+import com.apipetstory.pojo.PetPojo;
+import com.apipetstory.pojo.Tag;
+import com.apipetstory.pojo.UsuarioPojo;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -21,13 +30,17 @@ import static io.restassured.module.jsv.JsonSchemaValidator.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserApiTest {
-
+    private UsuarioPojo usuarioComum;
 
     @BeforeEach
     public void setUp(){
-        baseURI = "https://petstore.swagger.io";
-        // port = 8080;
-        basePath = "/v2";
+        Configuracoes configuracoes = ConfigFactory.create(Configuracoes.class);
+
+        baseURI = configuracoes.baseURI();
+        // port = configuracoes.port();
+        basePath = configuracoes.basePath();
+
+        this.usuarioComum = UsuarioDataFactory.criarUsuarioPojo();
     }
 
 
@@ -35,18 +48,10 @@ public class UserApiTest {
     @Test
     @Order(1)
     public void testCadastrar(){
+
             int status = given()
                 .contentType(ContentType.JSON)
-                .body("{\n" +
-                "  \"id\": 1,\n" +
-                "  \"username\": \"user1\",\n" +
-                "  \"firstName\": \"user1\",\n" +
-                "  \"lastName\": \"user1\",\n" +
-                "  \"email\": \"user1@email.com\",\n" +
-                "  \"password\": \"user1\",\n" +
-                "  \"phone\": \"user1\",\n" +
-                "  \"userStatus\": 1\n" +
-                "}")
+                .body(usuarioComum)
                 .when()
                     .post("/user")
                 .then()
@@ -88,29 +93,30 @@ public class UserApiTest {
     @Order(4)
     public void testCadastroDePetALoja() throws IOException{
 
+        PetPojo newPet = new PetPojo();
+        newPet.setId(1);
 
-        String requestBody = "{\n" +
-                "  \"id\": 123,\n" +
-                "  \"category\": {\n" +
-                "    \"id\": 1,\n" +
-                "    \"name\": \"Dogs\"\n" +
-                "  },\n" +
-                "  \"name\": \"Rex\",\n" +
-                "  \"photoUrls\": [\n" +
-                "    \"https://example.com/photo1.jpg\"\n" +
-                "  ],\n" +
-                "  \"tags\": [\n" +
-                "    {\n" +
-                "      \"id\": 1,\n" +
-                "      \"name\": \"Friendly\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"status\": \"available\"\n" +
-                "}";
+        Category category = new Category();
+        category.setId(1);
+        category.setName("Dogs");
+        newPet.setCategory(category);
+
+        newPet.setName("Rex");
+
+        newPet.setPhotoUrls(List.of(" "));
+
+        Tag tag = new Tag();
+        tag.setId(1);
+        tag.setName("Friendly");
+        newPet.setTags(List.of(tag));
+
+        newPet.setStatus("available");
+
+
 
         Response response = given()
             .contentType(ContentType.JSON)
-            .body(requestBody)
+            .body(newPet)
         .when()
             .post("/pet");
 
