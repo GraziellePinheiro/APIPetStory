@@ -4,6 +4,7 @@ import static io.restassured.matcher.RestAssuredMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,11 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import com.apipetstory.config.Configuracoes;
+import com.apipetstory.factory.PetDataFactory;
 import com.apipetstory.factory.UsuarioDataFactory;
 import com.apipetstory.pojo.Category;
 import com.apipetstory.pojo.PetPojo;
 import com.apipetstory.pojo.Tag;
 import com.apipetstory.pojo.UsuarioPojo;
+import com.apipetstory.utils.ApiUtils;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -31,6 +34,7 @@ import static io.restassured.module.jsv.JsonSchemaValidator.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserApiTest {
     private UsuarioPojo usuarioComum;
+    private PetPojo newPet;
 
     @BeforeEach
     public void setUp(){
@@ -41,90 +45,69 @@ public class UserApiTest {
         basePath = configuracoes.basePath();
 
         this.usuarioComum = UsuarioDataFactory.criarUsuarioPojo();
+        this.newPet = PetDataFactory.criarPetPojo();
     }
 
 
 
     @Test
     @Order(1)
-    public void testCadastrar(){
+    public void testCadastrarUsuarioComSucesso(){
 
-            int status = given()
-                .contentType(ContentType.JSON)
-                .body(usuarioComum)
-                .when()
-                    .post("/user")
-                .then()
-                    .log()
-                        .all()
-                        .extract()
-                            .statusCode();
-                assertEquals(200, status);
+        try {
+            Response response = ApiUtils.postCadastrarUsuario(usuarioComum, "/user");
+            ApiUtils.validarStatusCode(response, 200);
+            ApiUtils.validarTempoResposta(response, 4000L);
+        } catch (Exception e) {
+            fail("Erro ao cadastrar usuário: " + e.getMessage());
+        }
+
 
     }
     @Test
     @Order(2)
-    public void testFindUser(){
+    public void testBuscarUsuarioExistente(){
 
         Response response = given()
         .when()
             .get("/user/user1");
 
-        response.then().statusCode(200)
-            .and()
+        ApiUtils.validarStatusCode(response, 200);
+            response.then().and()
             .body("username", equalTo("user1"))
-            .body("email", equalTo("user1@email.com"));
+            .body("email", equalTo("user1@email.com"))
+            .body("firstName", equalTo("user1"));
         
     }
     @Test
     @Order(3)
-    public void testSubmeterLogin(){
+    public void testSubmeterLoginComSucesso(){
 
-        String message = given()
+        Response response = given()
         .when()
-            .get("/user/login?username=admin&password=admin")
-        .then()
-            .extract()
-                .path("message");
+            .get("/user/login?username=admin&password=admin");
+
+            ApiUtils.validarStatusCode(response, 200);
+
+            String message = response
+                .then()
+                .extract()
+                    .path("message");
 
         assertTrue(message.contains("logged in user session:"));
+
     }
     @Test
     @Order(4)
-    public void testCadastroDePetALoja() throws IOException{
+    public void testCadastroDeNovoPetALoja(){
 
-        PetPojo newPet = new PetPojo();
-        newPet.setId(1);
-
-        Category category = new Category();
-        category.setId(1);
-        category.setName("Dogs");
-        newPet.setCategory(category);
-
-        newPet.setName("Rex");
-
-        newPet.setPhotoUrls(List.of(" "));
-
-        Tag tag = new Tag();
-        tag.setId(1);
-        tag.setName("Friendly");
-        newPet.setTags(List.of(tag));
-
-        newPet.setStatus("available");
-
-
-
-        Response response = given()
-            .contentType(ContentType.JSON)
-            .body(newPet)
-        .when()
-            .post("/pet");
-
-
-        response.then().statusCode(200)
-            .and()
-            .body("name", equalTo("Rex"))
-            .body("status", equalTo("available"));
+        try {
+        Response response = ApiUtils.postCadastrarPet(newPet, "/pet");
+        ApiUtils.validarStatusCode(response, 200);
+        ApiUtils.validarCorpoDaRespostaCadastroPet(response, "Rex", "available", newPet.getCategory().getName());
+        } catch (Exception e) {
+            fail("Falha ao cadastrar o pet: " + e.getMessage());
+        }
     }
     
 
